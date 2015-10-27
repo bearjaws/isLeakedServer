@@ -4,8 +4,15 @@ function PasswordModel() {
     this.name = 'password';
 }
 
-PasswordModel.prototype.create = function(knex, body) {
-    
+PasswordModel.prototype.isLeaked = function(knex, password) {
+    return knex('passwords').where({
+        password: password
+    }).limit(1).then(function(result) {
+        if (result.length >= 1) {
+            return true;
+        }
+        return false;
+    });
 };
 
 module.exports = PasswordModel;
