@@ -31,14 +31,10 @@ describe('index', function () {
     });
 
 
-    it('should say "hello"', function (done) {
+    it('should return 200 for /status', function (done) {
         request(mock)
-            .get('/')
+            .get('/status')
             .expect(200)
-            .expect('Content-Type', /html/)
-            
-                .expect(/Hello, /)
-            
             .end(function (err, res) {
                 done(err);
             });

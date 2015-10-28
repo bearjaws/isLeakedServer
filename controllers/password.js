@@ -4,6 +4,7 @@ var PasswordModel = require('../models/password');
 var owasp = require('owasp-password-strength-test');
 var defaultConfig = require('../owasp.json');
 owasp.config(defaultConfig);
+
 module.exports = function (router) {
     var passwordModel = new PasswordModel();
 
@@ -12,7 +13,7 @@ module.exports = function (router) {
     });
 
     /**
-     * @api {post} /password/isLeaked Returns whether the provided password has been leaked
+     * @api {post} /password/isLeaked Checks if a password has been leaked.
      * @apiName isLeaked
      * @apiGroup Password
      *
@@ -22,7 +23,7 @@ module.exports = function (router) {
      * @apiSuccessExample Success-Response:
      *     HTTP/1.1 200 Success:
      *     {
-     *     		"isLeaked": false
+     *     	"isLeaked": false
      *     }
      * @apiErrorExample Error-Response:
      *     HTTP/1.1 400 Bad Request
@@ -32,27 +33,26 @@ module.exports = function (router) {
      *     }
      */
     router.post('/isLeaked', function (req, res) {
-        var password = req.body.password.toUpperCase();
-
+        var password = req.body.password;
         if (typeof password !== 'string') {
             return res.status(400).json({
-                "type": "UserError",
-                "message": "The post body must contain the password to validate."
+                'type': 'UserError',
+                'message': 'The post body must contain the password to validate.'
             }).end();
         }
 
         return passwordModel.isLeaked(req.knex, password).then(function(result) {
-            res.status(200).json({
-                "isLeaked": result
+            return res.status(200).json({
+                'isLeaked': result
             }).end();
         }).catch(function(error) {
-            res.status(500).end();
-            // Should log these errors, probab;y db related
+            return res.status(500).end();
+            // Should log these errors, probab;y db related, will need to sanatize as to not save PW
         });
     });
 
     /**
-     * @api {post} /password/test Returns whether the provided password meets OWASP standards. Addittionally checks if the password is contained in a known passwords list.
+     * @api {post} /password/test Runs OWASP tests and isLeaked test.
      * @apiName test
      * @apiGroup Password
      *
@@ -64,14 +64,14 @@ module.exports = function (router) {
      * @apiSuccessExample {json} Success-Response:
      *     HTTP/1.1 200 OK
      *     {
-     *     errors              : [],
-     *     failedTests         : [],
-     *     requiredTestErrors  : [],
-     *     optionalTestErrors  : [],
-     *     passedTests         : [ 0, 1, 2, 3, 4, 5, 6 ],
-     *     isPassphrase        : false,
-     *     strong              : true,
-     *     optionalTestsPassed : 4
+     *     	errors              : [],
+     *      failedTests         : [],
+     *      requiredTestErrors  : [],
+     *      optionalTestErrors  : [],
+     *      passedTests         : [ 0, 1, 2, 3, 4, 5, 6 ],
+     *      isPassphrase        : false,
+     *      strong              : true,
+     *      optionalTestsPassed : 4
      *      }
      * @apiErrorExample Error-Response:
      *     HTTP/1.1 400 BadRequest
@@ -81,11 +81,11 @@ module.exports = function (router) {
      *     }
      */
     router.post('/test', function (req, res) {
-        var password = req.body.password.toUpperCase();
+        var password = req.body.password;
         if (typeof password !== 'string') {
             return res.status(400).json({
-                "type": "UserError",
-                "message": "The post body must contain the password to validate."
+                'type': 'UserError',
+                'message': 'The post body must contain the password to validate.'
             }).end();
         }
 
@@ -95,19 +95,22 @@ module.exports = function (router) {
         }
 
         var owasp_result = owasp.test(password);
+
         return passwordModel.isLeaked(req.knex, password).then(function(result) {
             if (result === true) {
                 var message = 'The password is included in common password lists, ';
                 message += ' making it extremely insecure.';
                 owasp_result.errors.push(message);
                 owasp_result.requiredTestErrors.push(message);
+                owasp_result.strong = false;
             }
             owasp.config(defaultConfig);
-            res.status(200).json(owasp_result).end();
+            return res.status(200).json(owasp_result).end();
         }).catch(function(error) {
+            // Restore default config on error.
             owasp.config(defaultConfig);
-            res.status(500).end();
-            // Should log these errors, probab;y db related
+            return res.status(500).end();
+            // Should log these errors, probab;y db related, will need to sanatize as to not save PW
         });
     });
 };

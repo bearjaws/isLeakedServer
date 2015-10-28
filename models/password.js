@@ -6,7 +6,7 @@ function PasswordModel() {
 
 PasswordModel.prototype.isLeaked = function(knex, password) {
     return knex('passwords').where({
-        password: password
+        password: password.toUpperCase()
     }).limit(1).then(function(result) {
         if (result.length >= 1) {
             return true;

@@ -10,7 +10,7 @@ var knex = require('knex')({
 lr.on('line', function (line) {
     words.push({ password: line });
     // Perform batched prepared statmenets to improve insert performance
-    if (words.length >= 10) {
+    if (words.length >= 20) {
         lr.pause();
         knex('passwords').insert(words).then(function(result) {
             words = [];
@@ -26,29 +26,3 @@ lr.on('line', function (line) {
 lr.on('end', function () {
     console.log('All words processed.');
 });
-
-// pg.connect(process.env['PG_URL'], function(err, client, done) {
-//     if(err) {
-//         return console.error('error fetching client from pool', err);
-//     }
-//     lr.on('line', function (line) {
-//         words.push(line);
-//         if (words.length === 5) {
-//             lr.pause();
-//             var query = client.query({
-//                 text: "INSERT INTO passwords (password) VALUES ($1)",
-//                 values: words
-//             }, function(err, res) {
-//                 if (err) {
-//                     console.log(err);
-//                 }
-//                 words = [];
-//                 lr.resume();
-//             });
-//         }
-//     });
-//
-//     lr.on('end', function () {
-//         console.log('All words processed.');
-//     });
-// });
