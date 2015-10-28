@@ -1,5 +1,6 @@
 'use strict';
 
+var bluebird = require('bluebird');
 var PasswordModel = require('../models/password');
 var owasp = require('owasp-password-strength-test');
 var defaultConfig = require('../owasp.json');
@@ -42,11 +43,11 @@ module.exports = function (router) {
         }
 
         return passwordModel.isLeaked(req.knex, password).then(function(result) {
-            return res.status(200).json({
+            res.status(200).json({
                 'isLeaked': result
             }).end();
         }).catch(function(error) {
-            return res.status(500).end();
+             res.status(500).end();
             // Should log these errors, probab;y db related, will need to sanatize as to not save PW
         });
     });
@@ -105,11 +106,11 @@ module.exports = function (router) {
                 owasp_result.strong = false;
             }
             owasp.config(defaultConfig);
-            return res.status(200).json(owasp_result).end();
+            res.status(200).json(owasp_result).end();
         }).catch(function(error) {
             // Restore default config on error.
             owasp.config(defaultConfig);
-            return res.status(500).end();
+            res.status(500).end();
             // Should log these errors, probab;y db related, will need to sanatize as to not save PW
         });
     });
