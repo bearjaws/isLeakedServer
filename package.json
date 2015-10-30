@@ -1,9 +1,12 @@
 {
-  "name": "isleakedserver",
+  "name": "isLeakedserver",
   "version": "0.1.0",
   "description": "API server for isLeaked client, used for hosting the isLeaked password list",
   "author": "Michael Bearjaws",
   "main": "index.js",
+  "bin": {
+      "isLeakedServer": "bin/isLeaked.js"
+  },
   "scripts": {
     "test": "grunt test",
     "build": "grunt build",
@@ -44,6 +47,6 @@
   },
   "apidoc": {
     "title": "isLeaked API Docs",
-    "url": "https://isleaked.io"
+    "url": "https://isleaked.io/"
   }
 }
