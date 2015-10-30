@@ -7,22 +7,35 @@ var knex = require('knex')({
     connection: process.env['PG_URL']
 });
 
+function processWords() {
+    knex('passwords').insert(words).then(function(result) {
+        words = [];
+        lr.resume();
+    }).catch(function(error) {
+        console.log(error);
+        words = [];
+        lr.resume();
+    })
+}
+
 lr.on('line', function (line) {
     words.push({ password: line });
     // Perform batched prepared statmenets to improve insert performance
     if (words.length >= 20) {
         lr.pause();
-        knex('passwords').insert(words).then(function(result) {
-            words = [];
-            lr.resume();
-        }).catch(function(error) {
-            console.log(error);
-            words = [];
-            lr.resume();
-        })
+        processWords(words);
     }
 });
 
 lr.on('end', function () {
-    console.log('All words processed.');
+    // Process any remaining words in array.
+    if (words.length !== 0) {
+        return processWords().then(function() {
+            console.log('All words processed.');
+            process.exit();
+        });
+    } else {
+        console.log('All words processed.');
+        process.exit();
+    }
 });

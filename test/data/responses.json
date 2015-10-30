@@ -1,0 +1,71 @@
+{
+    "should be pass the OWASP check with a `secure` password": {
+        "errors": [],
+        "failedTests": [],
+        "isPassphrase": true,
+        "optionalTestErrors": [],
+        "optionalTestsPassed": 0,
+        "passedTests": [
+            0,
+            1,
+            2
+        ],
+        "requiredTestErrors": [],
+        "strong": true
+    },
+    "should be pass the OWASP check with a `secure` password, but fail": {
+        "errors": ["The password has been leaked,  making it extremely insecure."],
+        "failedTests": [],
+        "isPassphrase": false,
+        "optionalTestErrors": [],
+        "optionalTestsPassed": 4,
+        "passedTests": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "requiredTestErrors": ["The password has been leaked,  making it extremely insecure."],
+        "strong": false
+    },
+    "should use joi validation for post body on /password/test": {
+        "errors": [],
+        "failedTests": [],
+        "isPassphrase": true,
+        "optionalTestErrors": [],
+        "optionalTestsPassed": 0,
+        "passedTests": [
+            0,
+            1,
+            2
+        ],
+        "requiredTestErrors": [],
+        "strong": true
+    },
+    "should use joi validation for bad post body on /password/isLeaked": {
+        "type": "UserError",
+        "message": "The post body is invalid.",
+        "details": [{
+            "message": "\"password\" is required",
+            "path": "password",
+            "type": "any.required",
+            "context": {
+                "key": "password" }
+                }]
+            },
+    "should fail joi validation for post body on /password/test": {
+        "type": "UserError",
+        "message": "The post body is invalid.",
+        "details": [{
+            "context": {
+                "key": "minLength"
+            },
+            "message": "\"minLength\" must be a number",
+            "path": "owasp.minLength",
+            "type": "number.base"
+            }]
+    }
+}

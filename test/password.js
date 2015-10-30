@@ -6,7 +6,8 @@
 var kraken = require('kraken-js'),
 express = require('express'),
 path = require('path'),
-request = require('supertest');
+request = require('supertest'),
+responses = require('../test/data/responses.json');
 
 
 describe('password', function () {
@@ -64,13 +65,13 @@ describe('password', function () {
         });
     });
 
-    it('should return true for a password that has not been leaked', function (done) {
+    it('should return false for a password that has not been leaked', function (done) {
         request(mock)
         .post('/password/isLeaked')
         .send({
-            password: "022347D",
+            password: "02234far3ew(*^%$*(7D",
         })
-        .expect({ isLeaked: true })
+        .expect({ isLeaked: false })
         .end(function (err, res) {
             done(err);
         });
@@ -88,26 +89,32 @@ describe('password', function () {
         });
     });
 
+    it('should use joi validation for post body on /password/test', function (done) {
+        request(mock)
+        .post('/password/test')
+        .send({
+            password: "kfjfdhfhsdfhsdf82323388HUDSHHBD",
+            owasp: {
+                allowPassphrases       : true,
+                maxLength              : 100,
+                minLength              : 10,
+                minPhraseLength        : 20,
+                minOptionalTestsToPass : 3
+            }
+        })
+        .expect(responses['should use joi validation for post body on /password/test'])
+        .end(function (err, res) {
+            done(err);
+        });
+    });
+
     it('should be pass the OWASP check with a `secure` password', function (done) {
         request(mock)
         .post('/password/test')
         .send({
             password: "jfkjfAdjf29e29ewifdjkds@#()",
         })
-        .expect({
-            "errors": [],
-            "failedTests": [],
-            "isPassphrase": true,
-            "optionalTestErrors": [],
-            "optionalTestsPassed": 0,
-            "passedTests": [
-                0,
-                1,
-                2
-            ],
-            "requiredTestErrors": [],
-            "strong": true
-        })
+        .expect(responses['should be pass the OWASP check with a `secure` password'])
         .end(function (err, res) {
             done(err);
         });
@@ -120,24 +127,7 @@ describe('password', function () {
         .send({
             password: "*7¡VaMOS!",
         })
-        .expect({
-            "errors": ["The password is included in common password lists,  making it extremely insecure."],
-            "failedTests": [],
-            "isPassphrase": false,
-            "optionalTestErrors": [],
-            "optionalTestsPassed": 4,
-            "passedTests": [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6
-            ],
-            "requiredTestErrors": ["The password is included in common password lists,  making it extremely insecure."],
-            "strong": false
-        })
+        .expect(responses['should be pass the OWASP check with a `secure` password, but fail'])
         .end(function (err, res) {
             done(err);
         });
@@ -150,6 +140,37 @@ describe('password', function () {
             invalid: "022347D",
         })
         .expect(400)
+        .end(function (err, res) {
+            done(err);
+        });
+    });
+
+    it('should use joi validation for bad post body on /password/isLeaked', function (done) {
+        request(mock)
+        .post('/password/isLeaked')
+        .send({
+            invalid: "022347D",
+        })
+        .expect(responses['should use joi validation for bad post body on /password/isLeaked'])
+        .end(function (err, res) {
+            done(err);
+        });
+    });
+
+    it('should fail joi validation for post body on /password/test', function (done) {
+        request(mock)
+        .post('/password/test')
+        .send({
+            password: "kfjfdhfhsdfhsdf82323388HUDSHHBD",
+            owasp: {
+                allowPassphrases       : true,
+                maxLength              : 100,
+                minLength              : false,
+                minPhraseLength        : 'invalidString',
+                minOptionalTestsToPass : 3
+            }
+        })
+        .expect(responses['should fail joi validation for post body on /password/test'])
         .end(function (err, res) {
             done(err);
         });
