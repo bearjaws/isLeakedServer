@@ -12,15 +12,19 @@ if (process.argv[2] === 'createTables') {
         if (!exists) {
             return knex.schema.createTable('passwords', function(t) {
                 t.increments('id').primary();
-                t.string('password', 200).index('passwords_password_index');
+                t.string('password', 200);
+            }).then(function() {
+                var sql = "CREATE INDEX password_vector_index ON passwords";
+                sql += " USING gin(to_tsvector('english', password));";
+                return knex.schema.raw(sql);
             }).then(function() {
                 console.log('Table schema created successfully');
-            });
+                process.exit();
+            })
         } else {
             console.warn('Table with name `passwords` already exists.');
+            process.exit();
         }
-
-        process.exit();
     });
 } else if(process.argv[2] === 'addPasswords') {
     // Ensure they have provided a passwords list
@@ -32,13 +36,14 @@ if (process.argv[2] === 'createTables') {
     var total = 0;
 
     lr.on('line', function (line) {
-        words.push({ password: line });
+        words.push({ password: line.toUpperCase() });
         // Perform batched prepared statmenets to improve insert performance
-        // Could drop our indexes to improve performance as well.
+        // Could drop our indexes to improve performance as well but that would require
+        // another schema change at the end.
         if (words.length >= 40) {
             // Need to pause processing otherwise words[] gets overwritten
             lr.pause();
-            processWords(words);
+            processWords();
             total += 40;
             console.log('Processed ' + total + ' words.');
         }
@@ -75,7 +80,7 @@ function processWords() {
         words = [];
         lr.resume();
     }).catch(function(error) {
-        console.log(error);
+        console.warn(error);
         words = [];
         lr.resume();
     })

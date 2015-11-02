@@ -25,7 +25,6 @@ var schemas = {
             minOptionalTestsToPass : joi.number().integer().required()
         }).optional()
     })
-
 };
 
 module.exports = function (router) {
@@ -107,11 +106,11 @@ module.exports = function (router) {
     *     }
     */
     router.post('/test', function (req, res) {
-        var password = req.body.password;
+        var password = req.body.password.toUpperCase();
 
         return validate(req.body, schemas.test).then(function() {
             var owasp_result = owasp.test(password);
-            return passwordModel.isLeaked(req.knex, password).then(function(result) {
+            return passwordModel.mutationsLeaked(req.knex, password).then(function(result) {
                 if (result === true) {
                     var message = 'The password has been leaked, ';
                     message += ' making it extremely insecure.';
@@ -130,6 +129,7 @@ module.exports = function (router) {
                     'details': error.details
                 }).end();
             }
+            console.warn(error);
             // Restore default config on error.
             owasp.config(defaultConfig);
             res.status(500).end();
