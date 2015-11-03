@@ -14,7 +14,7 @@ var schemas = {
     joi.object().keys({
         password: joi.string().min(6).required()
     }),
-    'test':
+    'isSecure':
     joi.object().keys({
         password: joi.string().min(6).required(),
         owasp: joi.object().keys({
@@ -79,7 +79,7 @@ module.exports = function (router) {
     });
 
     /**
-    * @api {post} /password/test Runs OWASP tests and isLeaked test.
+    * @api {post} /password/isSecure Runs OWASP tests and isLeaked test.
     * @apiName test
     * @apiGroup Password
     *
@@ -109,10 +109,10 @@ module.exports = function (router) {
     *       "message": "The post body must contain the password to validate."
     *     }
     */
-    router.post('/test', function (req, res) {
+    router.post('/isSecure', function (req, res) {
         var password = req.body.password;
 
-        return validate(req.body, schemas.test).then(function() {
+        return validate(req.body, schemas.isSecure).then(function() {
             owasp.config(req.body.config || defaultConfig);
             var owaspResult = owasp.test(password);
             owaspResult.isLeaked = false;
@@ -141,7 +141,7 @@ module.exports = function (router) {
                     'details': error.details
                 }).end();
             }
-
+            console.warn(error);
             res.status(500).end();
             // Should log these errors, probably db related, will need to sanatize as to not save PW
         });
