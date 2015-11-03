@@ -10,7 +10,7 @@ npm install isLeakedServer -g
 Hosts a simple API for checking if passwords are available in a password list.
 
 1) Make sure to download the password list torrent [torrent file of 64M passwords](https://crackstation.net/downloads/crackstation-human-only.txt.gz.torrent)
-    * You can also provide your own list, just make sure its new line delimited for every word.
+* You can also provide your own list, just make sure its new line delimited for every word.
 
 2) Extract the text file
 
