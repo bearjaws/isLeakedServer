@@ -3,7 +3,7 @@
   Returns whether a password is in a password list or not.
 
   Please note that this only checks if the password is literally in the password dictionary. You may want to use
-  `/password/test` route which provides more comprehensive password testing.
+  `/password/isSecure` route which provides more comprehensive password testing.
 
 * **URL**
 
@@ -15,22 +15,29 @@
 
 * **Post Body**
 
-  ```
+  ```javascript
   {
       password: "<password>"
-  }```
+  }
+  ```
 
 * **Success Response:**
 
   * **Code:** 200 <br />
-    **Content:** `{ isLeaked : true }`
+    **Content:** 
+    ``` 
+    { 
+      isLeaked: true 
+    } 
+    ```
 
 * **Error Response:**
 
   * **Code:** 400 Bad Request <br />
   **Content:**
+
      ```
-     {
+    {
         "type": "UserError",
         "message": "The post body is invalid.",
         "details": [{
@@ -40,7 +47,8 @@
             "context": {
                 "key": "password" }
             }]
-    } ```
+    } 
+    ```
 
 **/password/isSecure**
 ----
@@ -70,7 +78,8 @@
         "minPhraseLength"        : 20,
         "minOptionalTestsToPass" : 3
       }
-  }```
+  }
+  ```
 
 * **Success Response:**
 
@@ -92,10 +101,11 @@
         "strong": true,
         "isLeaked": false,
         "similarPasswords": []
-    } ```
+    }
+    ```
 
-    Failed passwords return 200, but with more details.
-    Please use response.strong === true to determine if the password is secure or not.
+Failed passwords return 200, but with more details.
+Please use response.strong === true to determine if the password is secure or not.
 
 * **Code:** 200 <br />
     **Content:**
@@ -144,13 +154,15 @@
             "similarity": 0.35294117647058826
         }
     ]
-    } ```
+    }
+    ```
 
 
 * **Error Response:**
 
   * **Code:** 400 Bad Request <br />
     **Content:**
+
      ```
      {
         "type": "UserError",
