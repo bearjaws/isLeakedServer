@@ -79,7 +79,7 @@ describe('password', function () {
 
     it('should be able to post to the /password/test route', function (done) {
         request(mock)
-        .post('/password/test')
+        .post('/password/isSecure')
         .send({
             password: "jfkjfadjf29e29ewifdjkds@#()",
         })
@@ -91,7 +91,7 @@ describe('password', function () {
 
     it('should use joi validation for post body on /password/test', function (done) {
         request(mock)
-        .post('/password/test')
+        .post('/password/isSecure')
         .send({
             password: "kfjfdhfhsdfhsdf82323388HUDSHHBD",
             owasp: {
@@ -110,7 +110,7 @@ describe('password', function () {
 
     it('should be pass the OWASP check with a `secure` password', function (done) {
         request(mock)
-        .post('/password/test')
+        .post('/password/isSecure')
         .send({
             password: "jfkjfAdjf29e29ewifdjkds@#()",
         })
@@ -123,7 +123,7 @@ describe('password', function () {
 
     it('should be pass the OWASP check with a `secure` password, but fail isLeaked', function (done) {
         request(mock)
-        .post('/password/test')
+        .post('/password/isSecure')
         .send({
             password: "*7¡VaMOS!",
         })
@@ -159,7 +159,7 @@ describe('password', function () {
 
     it('should fail joi validation for post body on /password/test', function (done) {
         request(mock)
-        .post('/password/test')
+        .post('/password/isSecure')
         .send({
             password: "kfjfdhfhsdfhsdf82323388HUDSHHBD",
             owasp: {
