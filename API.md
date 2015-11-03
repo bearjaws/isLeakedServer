@@ -27,8 +27,8 @@
 
 * **Error Response:**
 
-  * **Code:** 400 Bad Request
-    **Content:**
+  * **Code:** 400 Bad Request <br />
+  **Content:**
      ```
      {
         "type": "UserError",
@@ -40,7 +40,7 @@
             "context": {
                 "key": "password" }
             }]
-    }```
+    } ```
 
 **/password/isSecure**
 ----
@@ -92,12 +92,12 @@
         "strong": true,
         "isLeaked": false,
         "similarPasswords": []
-    }```
+    } ```
 
     Failed passwords return 200, but with more details.
     Please use response.strong === true to determine if the password is secure or not.
 
-    * **Code:** 200 <br />
+* **Code:** 200 <br />
     **Content:**
     ```
     {
@@ -144,11 +144,12 @@
             "similarity": 0.35294117647058826
         }
     ]
-}```
+    } ```
+
 
 * **Error Response:**
 
-  * **Code:** 400 Bad Request
+  * **Code:** 400 Bad Request <br />
     **Content:**
      ```
      {
@@ -161,4 +162,4 @@
             "context": {
                 "key": "password" }
             }]
-    }```
+    } ```
