@@ -11,14 +11,15 @@
             2
         ],
         "requiredTestErrors": [],
-        "strong": true
+        "strong": true,
+        "isLeaked": false,
+        "similarPasswords": []
     },
     "should be pass the OWASP check with a `secure` password, but fail": {
-        "errors": ["The password has been leaked,  making it extremely insecure."],
+        "errors": [
+            "The password has been leaked, making it extremely insecure."
+        ],
         "failedTests": [],
-        "isPassphrase": false,
-        "optionalTestErrors": [],
-        "optionalTestsPassed": 4,
         "passedTests": [
             0,
             1,
@@ -28,8 +29,18 @@
             5,
             6
         ],
-        "requiredTestErrors": ["The password has been leaked,  making it extremely insecure."],
-        "strong": false
+        "requiredTestErrors": [
+            "The password has been leaked, making it extremely insecure."
+        ],
+        "optionalTestErrors": [],
+        "isPassphrase": false,
+        "strong": false,
+        "isLeaked": true,
+        "optionalTestsPassed": 4,
+        "similarPasswords": [{
+            "password": "\u0004*\u00037¡VAMOS!\u0003",
+            "similarity": 1
+        }]
     },
     "should use joi validation for post body on /password/test": {
         "errors": [],
@@ -43,7 +54,9 @@
             2
         ],
         "requiredTestErrors": [],
-        "strong": true
+        "similarPasswords": [],
+        "strong": true,
+        "isLeaked": false
     },
     "should use joi validation for bad post body on /password/isLeaked": {
         "type": "UserError",

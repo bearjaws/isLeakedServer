@@ -12,11 +12,11 @@ owasp.config(defaultConfig);
 var schemas = {
     'isLeaked':
     joi.object().keys({
-        password: joi.string().required()
+        password: joi.string().min(6).required()
     }),
     'test':
     joi.object().keys({
-        password: joi.string().required(),
+        password: joi.string().min(6).required(),
         owasp: joi.object().keys({
             allowPassphrases       : joi.boolean().required(),
             maxLength              : joi.number().integer().required(),
@@ -36,6 +36,8 @@ module.exports = function (router) {
 
     /**
     * @api {post} /password/isLeaked Checks if a password has been leaked.
+    * @description This checks if the password is in the database EXACTLY as provided,
+    * Please note that the /password/test route is much more through testing mutations of the password.
     * @apiName isLeaked
     * @apiGroup Password
     *
@@ -71,7 +73,7 @@ module.exports = function (router) {
                     'details': error.details
                 }).end();
             }
-            // Should log these errors, probab;y db related, will need to sanatize as to not save PW
+            // Should log these errors, probably db related, will need to sanatize as to not save PW
             res.status(500).end();
         });
     });
@@ -96,6 +98,8 @@ module.exports = function (router) {
     *      passedTests         : [ 0, 1, 2, 3, 4, 5, 6 ],
     *      isPassphrase        : false,
     *      strong              : true,
+    *      isLeaked            : false,
+    *      similarPasswords    : [],
     *      optionalTestsPassed : 4
     *      }
     * @apiErrorExample Error-Response:
@@ -106,20 +110,28 @@ module.exports = function (router) {
     *     }
     */
     router.post('/test', function (req, res) {
-        var password = req.body.password.toUpperCase();
+        var password = req.body.password;
 
         return validate(req.body, schemas.test).then(function() {
-            var owasp_result = owasp.test(password);
+            owasp.config(req.body.config || defaultConfig);
+            var owaspResult = owasp.test(password);
+            owaspResult.isLeaked = false;
+            // Normalize to uppercase for all future queries
+            password = password.toUpperCase();
             return passwordModel.mutationsLeaked(req.knex, password).then(function(result) {
-                if (result === true) {
-                    var message = 'The password has been leaked, ';
+                if (result.isLeaked === true) {
+                    // Since this route is for testing the security of the a password,
+                    // we add a custom message and set strong to false to indicate the
+                    // password fails to meet security requirements
+                    var message = 'The password has been leaked,';
                     message += ' making it extremely insecure.';
-                    owasp_result.errors.push(message);
-                    owasp_result.requiredTestErrors.push(message);
-                    owasp_result.strong = false;
+                    owaspResult.errors.push(message);
+                    owaspResult.requiredTestErrors.push(message);
+                    owaspResult.strong = false;
+                    owaspResult.isLeaked = true;
                 }
-                owasp.config(defaultConfig);
-                res.status(200).json(owasp_result).end();
+                owaspResult.similarPasswords = result.similarPasswords;
+                res.status(200).json(owaspResult).end();
             });
         }).catch(function(error) {
             if (error.name === 'ValidationError') {
@@ -129,11 +141,9 @@ module.exports = function (router) {
                     'details': error.details
                 }).end();
             }
-            console.warn(error);
-            // Restore default config on error.
-            owasp.config(defaultConfig);
+
             res.status(500).end();
-            // Should log these errors, probab;y db related, will need to sanatize as to not save PW
+            // Should log these errors, probably db related, will need to sanatize as to not save PW
         });
     });
 };

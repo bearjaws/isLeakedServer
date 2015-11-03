@@ -14,9 +14,7 @@ if (process.argv[2] === 'createTables') {
                 t.increments('id').primary();
                 t.string('password', 200);
             }).then(function() {
-                var sql = "CREATE INDEX password_vector_index ON passwords";
-                sql += " USING gin(to_tsvector('english', password));";
-                return knex.schema.raw(sql);
+
             }).then(function() {
                 console.log('Table schema created successfully');
                 process.exit();
@@ -25,6 +23,22 @@ if (process.argv[2] === 'createTables') {
             console.warn('Table with name `passwords` already exists.');
             process.exit();
         }
+    });
+} else if (process.argv[2] === 'addIndexes') {
+    var sql = "CREATE INDEX password_vector_index ON passwords";
+    sql += " USING gin(to_tsvector('english', password));";
+    return knex.schema.raw(sql).then(function() {
+        console.log('Added text vector index successfully');
+        return knex.schema.table('passwords', function (table) {
+            // This index is more performant for isLeaked queries
+            table.index('password');
+        });
+    }).then(function() {
+        console.log('Added btree password index successfully');
+        process.exit();
+    }).catch(function(err) {
+        console.warn(err);
+        process.exit(-1);
     });
 } else if(process.argv[2] === 'addPasswords') {
     // Ensure they have provided a passwords list
@@ -37,9 +51,7 @@ if (process.argv[2] === 'createTables') {
 
     lr.on('line', function (line) {
         words.push({ password: line.toUpperCase() });
-        // Perform batched prepared statmenets to improve insert performance
-        // Could drop our indexes to improve performance as well but that would require
-        // another schema change at the end.
+        // Perform batched statmenets to improve insert performance
         if (words.length >= 40) {
             // Need to pause processing otherwise words[] gets overwritten
             lr.pause();
