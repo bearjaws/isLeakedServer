@@ -80,9 +80,13 @@ if (process.argv[2] === 'createTables') {
     // To configure environment, please see krakenjs
     // https://github.com/krakenjs/kraken-js#configuration
     server = http.createServer(app);
-    server.listen(process.env.PORT || 9455);
+    server.listen(process.env.PORT || 8005);
     server.on('listening', function () {
         console.log('Server listening on http://localhost:%d', this.address().port);
+        ssl = https.createServer(app.kraken.get('ssl'), app);
+        ssl.listen(9455, function () {
+            console.log('HTTPS Server listening on port', ssl.address().port);
+        });
     });
 }
 

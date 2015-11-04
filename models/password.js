@@ -1,4 +1,5 @@
 'use strict';
+var bluebird = require('bluebird');
 var stringSimilarity = require('string-similarity');
 
 function PasswordModel() {
@@ -16,7 +17,7 @@ function wrap(string) {
  * @return {string[]} An array of password strings.
  */
 function generateMutations(password) {
-    var characterMapNumeric = {
+    var characterMap = {
         'a': '4',
         'b': '8',
         'e': '3',
@@ -34,6 +35,24 @@ function generateMutations(password) {
         '#': '',
         '3': 'E'
     };
+    var characterArray = [
+        'a',
+        'b',
+        'e',
+        'g',
+        'l',
+        'o',
+        's',
+        't',
+        '@',
+        '$',
+        '&',
+        '4',
+        '5',
+        '0',
+        '#',
+        '3'
+    ];
 
     var mutations = [];
     var string;
@@ -42,20 +61,20 @@ function generateMutations(password) {
     // anything with () at the end, despite using a parameterized query, this is not ideal
     //@TODO make stored procedure for the query and disable function execution
     mutations.push(wrap(password));
-    for (var letter in characterMapNumeric) {
-        string = password.replace(new RegExp(letter, 'gi'), characterMapNumeric[letter]);
+    return bluebird.resolve(characterArray).map(function(letter) {
+        string = password.replace(new RegExp(letter, 'gi'), characterMap[letter]);
         if (mutations.indexOf(wrap(string)) === -1) {
             mutations.push(wrap(string));
         }
 
         //This builds strings combining every previous change
-        mutated = mutated.replace(new RegExp(letter, 'gi'), characterMapNumeric[letter]);
+        mutated = mutated.replace(new RegExp(letter, 'gi'), characterMap[letter]);
         if (mutations.indexOf(wrap(mutated)) === -1) {
             mutations.push(wrap(mutated));
         }
-    }
-
-    return mutations;
+    }).then(function() {
+        return mutations;
+    });
 }
 
 /**
@@ -85,14 +104,16 @@ PasswordModel.prototype.isLeaked = function(knex, password) {
  * a similarity rating using Dice's coefficient
  */
 PasswordModel.prototype.mutationsLeaked = function(knex, password) {
-    var mutations = generateMutations(password).join(' | ');
-
     var sql = 'SELECT DISTINCT password';
     sql += ' FROM passwords, to_tsquery(?) query';
     sql += ' WHERE query @@ to_tsvector(\'english\', password);';
-    return knex.raw(sql, [mutations]).then(function(result) {
-        return result.rows;
-    }).then(function(rows) {
+    return generateMutations(password).then(function(mutations) {
+        // This transforms the array into the string needed to query postgres
+        return mutations.join(' | ');
+    }).then(function(mutationsString) {
+        return knex.raw(sql, [mutationsString]);
+    }).then(function(result) {
+        var rows = result.rows;
         var isLeaked = false;
         var passwords = [];
         for (var i = 0; i < rows.length; i++) {

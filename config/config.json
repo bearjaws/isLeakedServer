@@ -75,5 +75,9 @@
                 "method": "injectKnex"
             }
         }
+    },
+    "ssl": {
+        "key": "file:./certs/private.key",
+        "cert": "file:./certs/certificate.pem"
     }
 }
