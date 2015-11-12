@@ -14,7 +14,10 @@ var schemas = {
     joi.object().keys({
         password: joi.string().min(6).required()
     }),
-    'isSecure':
+    'isSecure': joi.object().keys({
+        password: joi.string().min(6).required()
+    }),
+    'owasp':
     joi.object().keys({
         password: joi.string().min(6).required(),
         owasp: joi.object().keys({
@@ -37,7 +40,7 @@ module.exports = function (router) {
     /**
     * @api {post} /password/isLeaked Checks if a password has been leaked.
     * @description This checks if the password is in the database EXACTLY as provided,
-    * Please note that the /password/test route is much more through testing mutations of the password.
+    * Please note that the /password/isSecure route is much more through, testing mutations of the password.
     * @apiName isLeaked
     * @apiGroup Password
     *
@@ -78,6 +81,58 @@ module.exports = function (router) {
         });
     });
 
+
+    /**
+    * @api {post} /password/isSecure Checks if a password has been leaked, this also verifies that
+    * common mutations of the provided password are not leaked as well.
+    * @apiName isLeaked
+    * @apiGroup Password
+    *
+    * @apiParam {String} password The password to check against known password lists.
+    *
+    * @apiSuccess {Boolean} isLeaked True if the password was found in a password list, false otherwise.
+    * @apiSuccessExample Success-Response:
+    *     HTTP/1.1 200 Success:
+    *     {
+    *     	"isLeaked": true,
+    *     	"similarPasswords": [{
+    *            "password": "!P@SSW0RD",
+    *            "similarity": 0.8235294117647058
+    *        }]
+    *     }
+    * @apiErrorExample Error-Response:
+    *     HTTP/1.1 400 Bad Request
+    *     {
+    *       "type": "UserError",
+    *       "message": "The post body must contain the password to validate."
+    *     }
+    */
+    router.post('/isSecure', function (req, res) {
+        var password = req.body.password;
+
+        return validate(req.body, schemas.isSecure).then(function() {
+            // Normalize to uppercase for all future queries
+            password = password.toUpperCase();
+            return passwordModel.mutationsLeaked(req.knex, password).then(function(result) {
+                res.status(200).json({
+                    isLeaked: result.isLeaked,
+                    similarPasswords: result.similarPasswords
+                }).end();
+            });
+        }).catch(function(error) {
+            if (error.name === 'ValidationError') {
+                return res.status(400).json({
+                    'type': 'UserError',
+                    'message': 'The post body is invalid.',
+                    'details': error.details
+                }).end();
+            }
+            res.status(500).end();
+            // Should log these errors, probably db related, will need to sanatize as to not save PW
+        });
+    });
+
+
     /**
     * @api {post} /password/isSecure Runs OWASP tests and isLeaked test.
     * @apiName test
@@ -109,10 +164,10 @@ module.exports = function (router) {
     *       "message": "The post body must contain the password to validate."
     *     }
     */
-    router.post('/isSecure', function (req, res) {
+    router.post('/owasp', function(req, res) {
         var password = req.body.password;
 
-        return validate(req.body, schemas.isSecure).then(function() {
+        return validate(req.body, schemas.owasp).then(function() {
             owasp.config(req.body.config || defaultConfig);
             var owaspResult = owasp.test(password);
             owaspResult.isLeaked = false;
@@ -141,7 +196,6 @@ module.exports = function (router) {
                     'details': error.details
                 }).end();
             }
-            console.warn(error);
             res.status(500).end();
             // Should log these errors, probably db related, will need to sanatize as to not save PW
         });

@@ -77,7 +77,7 @@ describe('password', function () {
         });
     });
 
-    it('should be able to post to the /password/test route', function (done) {
+    it('should be able to post to the /password/isSecure route', function (done) {
         request(mock)
         .post('/password/isSecure')
         .send({
@@ -89,9 +89,27 @@ describe('password', function () {
         });
     });
 
-    it('should use joi validation for post body on /password/test', function (done) {
+    it('should be fail an insecure password on /password/isSecure route', function (done) {
         request(mock)
         .post('/password/isSecure')
+        .send({
+            password: "m1cha3l",
+        })
+        .expect({
+            "isLeaked": true,
+            "similarPasswords": [{
+                "password": "*M1CHAEL",
+                "similarity": 0.6153846153846154
+            }
+        ]})
+        .end(function (err, res) {
+            done(err);
+        });
+    });
+
+    it('should use joi validation for post body on /password/owasp', function (done) {
+        request(mock)
+        .post('/password/owasp')
         .send({
             password: "kfjfdhfhsdfhsdf82323388HUDSHHBD",
             owasp: {
@@ -108,26 +126,26 @@ describe('password', function () {
         });
     });
 
-    it('should be pass the OWASP check with a `secure` password', function (done) {
+    it('should pass the OWASP check with a `secure` password', function (done) {
         request(mock)
-        .post('/password/isSecure')
+        .post('/password/owasp')
         .send({
             password: "jfkjfAdjf29e29ewifdjkds@#()",
         })
-        .expect(responses['should be pass the OWASP check with a `secure` password'])
+        .expect(responses['should pass the OWASP check with a `secure` password'])
         .end(function (err, res) {
             done(err);
         });
 
     });
 
-    it('should be pass the OWASP check with a `secure` password, but fail isLeaked', function (done) {
+    it('should pass the OWASP check with a `secure` password, but fail isLeaked', function (done) {
         request(mock)
-        .post('/password/isSecure')
+        .post('/password/owasp')
         .send({
             password: "*7¡VaMOS!",
         })
-        .expect(responses['should be pass the OWASP check with a `secure` password, but fail'])
+        .expect(responses['should pass the OWASP check with a `secure` password, but fail'])
         .end(function (err, res) {
             done(err);
         });
@@ -159,7 +177,7 @@ describe('password', function () {
 
     it('should fail joi validation for post body on /password/test', function (done) {
         request(mock)
-        .post('/password/isSecure')
+        .post('/password/owasp')
         .send({
             password: "kfjfdhfhsdfhsdf82323388HUDSHHBD",
             owasp: {

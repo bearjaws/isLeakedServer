@@ -1,5 +1,5 @@
 {
-    "should be pass the OWASP check with a `secure` password": {
+    "should pass the OWASP check with a `secure` password": {
         "errors": [],
         "failedTests": [],
         "isPassphrase": true,
@@ -15,7 +15,7 @@
         "isLeaked": false,
         "similarPasswords": []
     },
-    "should be pass the OWASP check with a `secure` password, but fail": {
+    "should pass the OWASP check with a `secure` password, but fail": {
         "errors": [
             "The password has been leaked, making it extremely insecure."
         ],
